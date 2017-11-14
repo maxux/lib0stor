@@ -3,10 +3,8 @@ EXEC = g8stor-cli
 SRC = g8stor-cli.c
 OBJ = g8stor-cli.o
 
-CFLAGS  = -pthread -W -Wall -O2 -I../src/ -I/usr/include/hiredis -g
-LDFLAGS = ../src/lib0stor.a -lhiredis -lssl -lcrypto -lsnappy -lz -lm
-
-CC = gcc
+CFLAGS  = -pthread -W -Wall -O2 -I../src/ -g
+LDFLAGS = ../src/lib0stor.a -lssl -lcrypto -lsnappy -lz -lm
 
 all: $(EXEC)
 

@@ -6,8 +6,6 @@ OBJ = lib0stor.o xxtea.o
 CFLAGS  = -pthread -fPIC -W -Wall -O2 -I3rdparty/xxtea-c -g
 LDFLAGS = -lssl -lcrypto -lsnappy -lz -lm
 
-CC = gcc
-
 all: $(LIBRARY)
 
 $(LIBRARY): $(OBJ)

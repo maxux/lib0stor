@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <hiredis.h>
 #include <lib0stor.h>
 
 int main(int argc, char *argv[]) {
@@ -14,7 +13,7 @@ int main(int argc, char *argv[]) {
     // arguments checker
     //
     if(argc < 3) {
-        fprintf(stderr, "[-] usage: %s input-filename output-filename [ardb-addr]\n", argv[0]);
+        fprintf(stderr, "[-] usage: %s input-filename output-filename\n", argv[0]);
         exit(EXIT_FAILURE);
     }
 
@@ -27,11 +26,13 @@ int main(int argc, char *argv[]) {
     //
     // connect to redis (ardb)
     //
+    /*
     if(argc == 4) {
         printf("[+] connecting to remote target: %s\n", argv[3]);
         if(!(remote = remote_connect(argv[3], 16379)))
             exit(EXIT_FAILURE);
     }
+    */
 
     //
     // initialize buffer and chunks

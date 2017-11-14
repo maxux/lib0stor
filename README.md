@@ -1,6 +1,6 @@
 # libg8stor (0-stor legacy library)
 ```bash
-git clone https://github.com/zero-os/lib0stor
+git clone https://github.com/maxux/lib0stor
 cd lib0stor
 ```
 
@@ -10,7 +10,9 @@ git submodule init
 git submodule update
 ```
 
-Install dependencies (all devel): `ssl snappy zlib python`
+Install dependencies: `ssl snappy zlib python`
+
+On ubuntu, you can install them via: `apt-get install build-essential libz-dev libssl-dev python3-dev libsnappy-dev`
 
 Compile library
 ```bash

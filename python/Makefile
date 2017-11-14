@@ -6,8 +6,6 @@ OBJ = lib0stor-python.o
 CFLAGS  = -pthread -g -fPIC -I/usr/include/python3.5m -W -Wall -O2 -Wno-missing-field-initializers -I../src/ 
 LDFLAGS = ../src/lib0stor.a -lssl -lcrypto -lsnappy -lz -lm -lpython3.5m
 
-CC = gcc
-
 all: $(LIBRARY)
 
 $(LIBRARY): $(OBJ)
