@@ -1,4 +1,4 @@
-# libg8stor
+# libg8stor (0-stor legacy library)
 ```bash
 git clone https://github.com/zero-os/lib0stor
 cd lib0stor
@@ -6,18 +6,17 @@ cd lib0stor
 
 Prepare dependencies
 ```bash
-rm -rf src/3rdparty/xxtea-c
-git clone https://github.com/xxtea/xxtea-c.git src/3rdparty/xxtea-c
+git submodule init
+git submodule update
 ```
 
-Install dependencies (all devel): `hiredis ssl snappy zlib python`
+Install dependencies (all devel): `ssl snappy zlib python`
 
 Compile library
 ```bash
 cd src
 make clean && make
 ```
-
 
 Compile command-line tools
 ```bash
