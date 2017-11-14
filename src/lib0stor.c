@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <hiredis.h>
 #include <snappy-c.h>
 #include <zlib.h>
 #include <math.h>
@@ -19,38 +18,6 @@
 void diep(char *str) {
     perror(str);
     exit(EXIT_FAILURE);
-}
-
-//
-// remote manager (redis)
-//
-remote_t *remote_connect(const char *host, int port) {
-    struct timeval timeout = {5, 0};
-    remote_t *remote;
-    redisReply *reply;
-
-    if(!(remote = malloc(sizeof(remote_t))))
-        diep("malloc");
-
-    remote->redis = redisConnectWithTimeout(host, port, timeout);
-    if(remote->redis == NULL || remote->redis->err) {
-        printf("[-] redis: %s\n", (remote->redis->err) ? remote->redis->errstr : "memory error.");
-        return NULL;
-    }
-
-    // ping redis to ensure connection
-    reply = redisCommand(remote->redis, "PING");
-    if(strcmp(reply->str, "PONG"))
-        fprintf(stderr, "[-] warning, invalid redis PING response: %s\n", reply->str);
-
-    freeReplyObject(reply);
-
-    return remote;
-}
-
-void remote_free(remote_t *remote) {
-    redisFree(remote->redis);
-    free(remote);
 }
 
 //
@@ -292,46 +259,22 @@ chunk_t *decrypt_chunk(chunk_t *chunk) {
 }
 
 //
-// uploader and downloader
+// deprecated
 //
 chunk_t *upload_chunk(remote_t *remote, chunk_t *chunk) {
-    redisReply *reply;
+    (void) remote;
 
-    //
-    // add to backend
-    //
-    reply = redisCommand(remote->redis, "SET %b %b", chunk->id, SHA256LEN, chunk->data, chunk->length);
-    printf("[+] uploading: %s: %s\n", chunk->id, reply->str);
-    freeReplyObject(reply);
-
+    printf("[-] upload: deprecated, not implemented anymore\n");
     return chunk;
 }
 
 chunk_t *download_chunk(remote_t *remote, chunk_t *chunk) {
-    redisReply *reply;
+    (void) remote;
 
-    //
-    // reading from backend
-    //
-    reply = redisCommand(remote->redis, "GET %b", chunk->id, SHA256LEN);
-    if(!reply->str) {
-        fprintf(stderr, "[-] object not found on the backend\n");
-        freeReplyObject(reply);
-        return 0;
-    }
-
-    printf("[+] downloaded: %s: %d\n", chunk->id, reply->len);
-
-    chunk->length = reply->len;
-    chunk->data = (unsigned char *) malloc(sizeof(char) * reply->len);
-    memcpy(chunk->data, reply->str, reply->len);
-
+    printf("[-] upload: deprecated, not implemented anymore\n");
     return chunk;
 }
 
-//
-// deprecated
-//
 chunk_t *upload(remote_t *remote, buffer_t *buffer) {
     (void) remote;
     (void) buffer;

@@ -1,7 +1,6 @@
 #include <Python.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <hiredis.h>
 #include "lib0stor.h"
 
 /*

@@ -2,7 +2,7 @@
     #define LIBG8STOR_H
 
     typedef struct remote_t {
-        redisContext *redis;
+        void *redis;
 
     } remote_t;
 
