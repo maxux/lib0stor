@@ -1,6 +1,6 @@
 all:
 	$(MAKE) -C src
-	$(MAKE) -C python
+	$(MAKE) -C python distutils
 	$(MAKE) -C tools
 
 clean:

@@ -12,6 +12,9 @@ all:
 	@echo "Please use setup.py to compile and install this module"
 	@echo "If you still want to compile the library manually, please 'make g8storclient.so'"
 
+distutils:
+	python3 setup.py build
+
 $(LIBRARY): $(OBJ)
 	$(CC) -shared -o $@ $^ $(LDFLAGS)
 
@@ -22,7 +25,7 @@ clean:
 	rm -fv *.o
 
 mrproper: clean
-	rm -fv $(LIBRARY)
+	rm -rfv $(LIBRARY) build
 
 dist: $(LIBRARY)
 	mkdir -p $(PACKAGE)

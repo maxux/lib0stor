@@ -17,5 +17,5 @@ setup(
     author='Maxime Daniel',
     author_email='maxime@gig.tech',
     license='Apache 2.0',
-    ext_modules = [g8storclient]
+    ext_modules=[g8storclient]
 )

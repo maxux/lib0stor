@@ -29,7 +29,9 @@ make -C src
 
 ### Python binding
 ```
-make -C python
+cd python
+python3 setup.py build
+cd ..
 ```
 
 ### Command Line Tool
