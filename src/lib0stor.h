@@ -40,7 +40,7 @@
     void chunk_free(chunk_t *chunk);
 
     // encryption
-    chunk_t *encrypt_chunk(const char *chunk, size_t chunksize);
+    chunk_t *encrypt_chunk(const unsigned char *chunk, size_t chunksize);
     chunk_t *decrypt_chunk(chunk_t *chunk);
 
     // networking

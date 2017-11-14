@@ -161,7 +161,7 @@ void chunk_free(chunk_t *chunk) {
 //
 // encrypt a buffer
 // returns a chunk with key, cipher, data and it's length
-chunk_t *encrypt_chunk(const char *chunk, size_t chunksize) {
+chunk_t *encrypt_chunk(const unsigned char *chunk, size_t chunksize) {
     // hashing this chunk
     char *hashkey = sha256(chunk, chunksize);
     printf("[+] chunk hash: %s\n", (char *) hashkey);
@@ -229,8 +229,8 @@ chunk_t *decrypt_chunk(chunk_t *chunk) {
     //
     size_t uncompressed_length;
     snappy_uncompressed_length(plain_data, plain_length, &uncompressed_length);
-    char *uncompress = (char *) malloc(uncompressed_length);
-    if(snappy_uncompress(plain_data, plain_length, uncompress, &uncompressed_length) != SNAPPY_OK) {
+    unsigned char *uncompress = (unsigned char *) malloc(uncompressed_length);
+    if(snappy_uncompress(plain_data, plain_length, (char *) uncompress, &uncompressed_length) != SNAPPY_OK) {
         fprintf(stderr, "[-] snappy uncompression error\n");
         exit(EXIT_FAILURE);
     }

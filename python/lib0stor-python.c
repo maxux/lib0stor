@@ -84,7 +84,6 @@ static PyObject *g8storclient_decrypt(PyObject *self, PyObject *args) {
     // chunks
     printf("[+] decrypting %d chunks\n", chunks);
     for(int i = 0; i < chunks; i++) {
-        size_t chunksize;
         char *id, *cipher;
         unsigned char **data, *datadup;
         unsigned int length;
