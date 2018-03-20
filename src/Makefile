@@ -3,7 +3,7 @@ LIBRARY = lib0stor.so
 SRC = lib0stor.c 3rdparty/xxtea-c/xxtea.c
 OBJ = lib0stor.o xxtea.o
 
-CFLAGS  = -pthread -fPIC -W -Wall -O2 -I3rdparty/xxtea-c -g
+CFLAGS  = -std=c99 -pthread -fPIC -W -Wall -O2 -I3rdparty/xxtea-c -g
 LDFLAGS = -lssl -lcrypto -lsnappy -lz -lm
 
 all: $(LIBRARY)
