@@ -5,7 +5,8 @@ g8storclient = Extension(
     include_dirs=['../src/'],
     libraries=['ssl', 'crypto', 'snappy', 'z', 'm'],
     extra_objects=['../src/lib0stor.a'],
-    sources=['lib0stor-python.c']
+    sources=['lib0stor-python.c'],
+    extra_compile_args=['-std=c99'],
 )
 
 setup(
