@@ -13,14 +13,6 @@
 #define SHA256LEN     (size_t) SHA256_DIGEST_LENGTH * 2
 
 //
-// internal system
-//
-void diep(char *str) {
-    perror(str);
-    exit(EXIT_FAILURE);
-}
-
-//
 // buffer manager
 //
 static size_t file_length(FILE *fp) {
@@ -34,9 +26,11 @@ static size_t file_length(FILE *fp) {
     return length;
 }
 
-static size_t file_load(char *filename, buffer_t *buffer) {
-    if(!(buffer->fp = fopen(filename, "r")))
-        diep("fopen");
+static ssize_t file_load(char *filename, buffer_t *buffer) {
+    if(!(buffer->fp = fopen(filename, "r"))) {
+        perror("[-] fopen");
+        return -1;
+    }
 
     buffer->length = file_length(buffer->fp);
     printf("[+] filesize: %lu bytes\n", buffer->length);
@@ -44,8 +38,10 @@ static size_t file_load(char *filename, buffer_t *buffer) {
     if(buffer->length == 0)
         return 0;
 
-    if(!(buffer->data = malloc(sizeof(char) * buffer->chunksize)))
-        diep("malloc");
+    if(!(buffer->data = malloc(sizeof(char) * buffer->chunksize))) {
+        perror("[-] malloc");
+        return 0;
+    }
 
     return buffer->length;
 }
@@ -53,11 +49,14 @@ static size_t file_load(char *filename, buffer_t *buffer) {
 buffer_t *bufferize(char *filename) {
     buffer_t *buffer;
 
-    if(!(buffer = calloc(1, sizeof(buffer_t))))
-        diep("malloc");
+    if(!(buffer = calloc(1, sizeof(buffer_t)))) {
+        perror("[-] malloc");
+        return NULL;
+    }
 
     buffer->chunksize = CHUNK_SIZE;
-    file_load(filename, buffer);
+    if(file_load(filename, buffer) < 0)
+        return NULL;
 
     // file empty, nothing to do.
     if(buffer->length == 0) {
@@ -78,11 +77,16 @@ buffer_t *bufferize(char *filename) {
 buffer_t *buffer_writer(char *filename) {
     buffer_t *buffer;
 
-    if(!(buffer = calloc(1, sizeof(buffer_t))))
-        diep("malloc");
+    if(!(buffer = calloc(1, sizeof(buffer_t)))) {
+        perror("[-] malloc");
+        return NULL;
+    }
 
-    if(!(buffer->fp = fopen(filename, "w")))
-        diep("fopen");
+    if(!(buffer->fp = fopen(filename, "w"))) {
+        perror("[-] fopen");
+        free(buffer);
+        return NULL;
+    }
 
     return buffer;
 }
@@ -94,8 +98,10 @@ const unsigned char *buffer_next(buffer_t *buffer) {
         buffer->chunksize = buffer->length - buffer->current;
 
     // loading this chunk in memory
-    if(fread(buffer->data, buffer->chunksize, 1, buffer->fp) != 1)
-        diep("fread");
+    if(fread(buffer->data, buffer->chunksize, 1, buffer->fp) != 1) {
+        perror("[-] fread");
+        return NULL;
+    }
 
     buffer->current += buffer->chunksize;
 
@@ -137,8 +143,10 @@ static char *sha256(const unsigned char *buffer, size_t length) {
 chunk_t *chunk_new(char *id, char *cipher, unsigned char *data, size_t length) {
     chunk_t *chunk;
 
-    if(!(chunk = malloc(sizeof(chunk_t))))
-        diep("malloc");
+    if(!(chunk = malloc(sizeof(chunk_t)))) {
+        perror("[-] malloc");
+        return NULL;
+    }
 
     chunk->id = id;
     chunk->cipher = cipher;
@@ -236,6 +244,8 @@ chunk_t *decrypt_chunk(chunk_t *chunk) {
     }
 
     chunk_t *output = chunk_new(NULL, NULL, uncompress, uncompressed_length);
+    if(!output)
+        return 0;
 
     //
     // testing integrity
