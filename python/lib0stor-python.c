@@ -29,6 +29,7 @@ static PyObject *g8storclient_encrypt(PyObject *self, PyObject *args) {
     (void) self;
     buffer_t *buffer;
     char *file;
+    size_t finalsize = 0;
 
     if(!PyArg_ParseTuple(args, "s", &file))
         return NULL;
@@ -54,10 +55,11 @@ static PyObject *g8storclient_encrypt(PyObject *self, PyObject *args) {
         PyDict_SetItemString(pychunk, "data", Py_BuildValue("y#", chunk->data, chunk->length));
         PyList_SetItem(hashes, i, pychunk);
 
+        finalsize += chunk->length;
         chunk_free(chunk);
     }
 
-    printf("[+] finalsize: %lu bytes\n", buffer->finalsize);
+    printf("[+] finalsize: %lu bytes\n", finalsize);
 
     // cleaning
     buffer_free(buffer);
