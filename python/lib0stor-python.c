@@ -41,7 +41,7 @@ static PyObject *g8storclient_encrypt(PyObject *self, PyObject *args) {
     // chunks
     PyObject *hashes = PyList_New(buffer->chunks);
 
-    printf("[+] encrypting %d chunks\n", buffer->chunks);
+    // printf("[+] encrypting %d chunks\n", buffer->chunks);
     for(int i = 0; i < buffer->chunks; i++) {
         const unsigned char *data = buffer_next(buffer);
 
@@ -59,7 +59,7 @@ static PyObject *g8storclient_encrypt(PyObject *self, PyObject *args) {
         chunk_free(chunk);
     }
 
-    printf("[+] finalsize: %lu bytes\n", finalsize);
+    // printf("[+] finalsize: %lu bytes\n", finalsize);
 
     // cleaning
     buffer_free(buffer);
@@ -84,7 +84,7 @@ static PyObject *g8storclient_decrypt(PyObject *self, PyObject *args) {
     int chunks = (int) PyList_Size(hashes);
 
     // chunks
-    printf("[+] decrypting %d chunks\n", chunks);
+    // printf("[+] decrypting %d chunks\n", chunks);
     for(int i = 0; i < chunks; i++) {
         char *id, *cipher;
         unsigned char **data, *datadup;
@@ -112,13 +112,13 @@ static PyObject *g8storclient_decrypt(PyObject *self, PyObject *args) {
 
         buffer->chunks += 1;
         buffer->finalsize += output->length;
-        printf("[+] chunk restored: %lu bytes\n", output->length);
+        // printf("[+] chunk restored: %lu bytes\n", output->length);
 
         chunk_free(chunk);
     }
 
     size_t finalsize = buffer->finalsize;
-    printf("[+] finalsize: %lu bytes\n", finalsize);
+    // printf("[+] finalsize: %lu bytes\n", finalsize);
 
     // cleaning
     buffer_free(buffer);

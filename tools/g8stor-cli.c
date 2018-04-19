@@ -20,6 +20,8 @@ int main(int argc, char *argv[]) {
     input = argv[1];
     output = argv[2];
 
+    lib0stor_enable_debug();
+
     printf("[+] uploading file: %s\n", input);
     printf("[+] restoring file: %s\n", output);
 

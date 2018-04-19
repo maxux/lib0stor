@@ -12,6 +12,14 @@
 #define CHUNK_SIZE    1024 * 512    // 512 KB
 #define SHA256LEN     (size_t) SHA256_DIGEST_LENGTH * 2
 
+static int libdebug = 0;
+
+void lib0stor_enable_debug() {
+    libdebug = 1;
+}
+
+#define verbose(...) { if(libdebug) { printf(__VA_ARGS__); } }
+
 //
 // buffer manager
 //
@@ -33,7 +41,7 @@ static ssize_t file_load(char *filename, buffer_t *buffer) {
     }
 
     buffer->length = file_length(buffer->fp);
-    printf("[+] filesize: %lu bytes\n", buffer->length);
+    verbose("[+] filesize: %lu bytes\n", buffer->length);
 
     if(buffer->length == 0)
         return 0;
@@ -60,7 +68,7 @@ buffer_t *bufferize(char *filename) {
 
     // file empty, nothing to do.
     if(buffer->length == 0) {
-        fprintf(stderr, "[-] file is empty, nothing to do.\n");
+        verbose("[-] file is empty, nothing to do.\n");
         free(buffer);
         return NULL;
     }
@@ -172,7 +180,7 @@ void chunk_free(chunk_t *chunk) {
 chunk_t *encrypt_chunk(const unsigned char *chunk, size_t chunksize) {
     // hashing this chunk
     char *hashkey = sha256(chunk, chunksize);
-    printf("[+] chunk hash: %s\n", (char *) hashkey);
+    verbose("[+] chunk hash: %s\n", (char *) hashkey);
 
     //
     // compress
@@ -193,7 +201,7 @@ chunk_t *encrypt_chunk(const unsigned char *chunk, size_t chunksize) {
     unsigned char *encrypt_data = xxtea_encrypt(compressed, output_length, hashkey, &encrypt_length);
 
     char *hashcrypt = sha256(encrypt_data, encrypt_length);
-    printf("[+] encrypted hash: %s\n", (char *) hashcrypt);
+    verbose("[+] encrypted hash: %s\n", (char *) hashcrypt);
 
     //
     // data checksum
@@ -228,7 +236,7 @@ chunk_t *decrypt_chunk(chunk_t *chunk) {
     // printf("[+] cipher: %s\n", chunk->cipher);
     char *plain_data = xxtea_decrypt(chunk->data + 16, chunk->length - 16, chunk->cipher, &plain_length);
     if(!plain_data) {
-        fprintf(stderr, "[-] cannot decrypt data, invalid key or payload\n");
+        verbose("[-] cannot decrypt data, invalid key or payload\n");
         return 0;
     }
 
@@ -239,7 +247,7 @@ chunk_t *decrypt_chunk(chunk_t *chunk) {
     snappy_uncompressed_length(plain_data, plain_length, &uncompressed_length);
     unsigned char *uncompress = (unsigned char *) malloc(uncompressed_length);
     if(snappy_uncompress(plain_data, plain_length, (char *) uncompress, &uncompressed_length) != SNAPPY_OK) {
-        fprintf(stderr, "[-] snappy uncompression error\n");
+        verbose("[-] snappy uncompression error\n");
         exit(EXIT_FAILURE);
     }
 
@@ -254,8 +262,8 @@ chunk_t *decrypt_chunk(chunk_t *chunk) {
     // printf("[+] integrity: %s\n", integrity);
 
     if(strcmp(integrity, chunk->cipher)) {
-        fprintf(stderr, "[-] integrity check failed: hash mismatch\n");
-        fprintf(stderr, "[-] %s <> %s\n", integrity, chunk->cipher);
+        verbose("[-] integrity check failed: hash mismatch\n");
+        verbose("[-] %s <> %s\n", integrity, chunk->cipher);
         // FIXME: free
         return 0;
     }

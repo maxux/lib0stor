@@ -50,4 +50,7 @@
     // deprecated
     chunk_t *upload(remote_t *remote, buffer_t *buffer);
     size_t download(remote_t *remote, chunk_t *chunk, buffer_t *buffer);
+
+    // debug
+    void lib0stor_enable_debug();
 #endif
