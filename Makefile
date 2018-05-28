@@ -3,6 +3,9 @@ all:
 	$(MAKE) -C python distutils
 	$(MAKE) -C tools
 
+install:
+	$(MAKE) -C src
+
 clean:
 	$(MAKE) -C src clean
 	$(MAKE) -C python clean
