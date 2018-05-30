@@ -36,7 +36,7 @@ static size_t file_length(FILE *fp) {
 
 static ssize_t file_load(char *filename, buffer_t *buffer) {
     if(!(buffer->fp = fopen(filename, "r"))) {
-        perror("[-] fopen");
+        perror(filename);
         return -1;
     }
 
@@ -91,7 +91,7 @@ buffer_t *buffer_writer(char *filename) {
     }
 
     if(!(buffer->fp = fopen(filename, "w"))) {
-        perror("[-] fopen");
+        perror(filename);
         free(buffer);
         return NULL;
     }
