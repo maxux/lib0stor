@@ -234,31 +234,33 @@ chunk_t *encrypt_chunk(const unsigned char *chunk, size_t chunksize) {
 // it takes a chunk as parameter
 // returns a chunk (without key and cipher) with payload data and length
 chunk_t *decrypt_chunk(chunk_t *chunk) {
+    chunk_t *output = NULL;
+    char *plaindata = NULL;
+
     //
     // uncrypt payload
     //
-    size_t plain_length;
+    size_t plainlength;
     // printf("[+] cipher: %s\n", chunk->cipher);
-    char *plain_data = xxtea_decrypt(chunk->data + 16, chunk->length - 16, chunk->cipher, &plain_length);
-    if(!plain_data) {
+    if(!(plaindata = xxtea_decrypt(chunk->data + 16, chunk->length - 16, chunk->cipher, &plainlength))) {
         verbose("[-] cannot decrypt data, invalid key or payload\n");
-        return 0;
+        return NULL;
     }
 
     //
     // decompress
     //
     size_t uncompressed_length;
-    snappy_uncompressed_length(plain_data, plain_length, &uncompressed_length);
+    snappy_uncompressed_length(plaindata, plainlength, &uncompressed_length);
+
     unsigned char *uncompress = (unsigned char *) malloc(uncompressed_length);
-    if(snappy_uncompress(plain_data, plain_length, (char *) uncompress, &uncompressed_length) != SNAPPY_OK) {
+    if(snappy_uncompress(plaindata, plainlength, (char *) uncompress, &uncompressed_length) != SNAPPY_OK) {
         verbose("[-] snappy uncompression error\n");
-        exit(EXIT_FAILURE);
+        return NULL;
     }
 
-    chunk_t *output = chunk_new(NULL, NULL, uncompress, uncompressed_length);
-    if(!output)
-        return 0;
+    if(!(output = chunk_new(NULL, NULL, uncompress, uncompressed_length)))
+        return NULL;
 
     //
     // testing integrity
@@ -270,13 +272,11 @@ chunk_t *decrypt_chunk(chunk_t *chunk) {
         verbose("[-] integrity check failed: hash mismatch\n");
         verbose("[-] %s <> %s\n", integrity, chunk->cipher);
         // FIXME: free
-        return 0;
+        return NULL;
     }
 
     free(integrity);
-
-    // cleaning
-    free(plain_data);
+    free(plaindata);
 
     return output;
 }
