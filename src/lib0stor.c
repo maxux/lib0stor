@@ -125,11 +125,16 @@ void buffer_free(buffer_t *buffer) {
 //
 // hashing
 //
+char __hex[] = "0123456789abcdef";
+
 static char *sha256hex(unsigned char *hash) {
     char *buffer = calloc((SHA256_DIGEST_LENGTH * 2) + 1, sizeof(char));
+    char *writer = buffer;
 
-    for(int i = 0; i < SHA256_DIGEST_LENGTH; i++)
-        sprintf((char *) buffer + (i * 2), "%02x", hash[i]);
+    for(int i = 0, j = 0; i < SHA256_DIGEST_LENGTH; i++, j += 2) {
+        *writer++ = __hex[(hash[i] & 0xF0) >> 4];
+        *writer++ = __hex[hash[i] & 0x0F];
+    }
 
     return buffer;
 }
