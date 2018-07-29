@@ -18,8 +18,8 @@
     } buffer_t;
 
     typedef struct chunk_t {
-        char *id;
-        char *cipher;
+        unsigned char *id;
+        unsigned char *cipher;
         unsigned char *data;
         size_t length;
 
@@ -36,8 +36,9 @@
     void buffer_free(buffer_t *buffer);
 
     // chunk
-    chunk_t *chunk_new(char *hash, char *key, unsigned char *data, size_t length);
+    chunk_t *chunk_new(unsigned char *hash, unsigned char *key, unsigned char *data, size_t length);
     void chunk_free(chunk_t *chunk);
+    char *md5hex(unsigned char *hash);
 
     // encryption
     chunk_t *encrypt_chunk(const unsigned char *chunk, size_t chunksize);

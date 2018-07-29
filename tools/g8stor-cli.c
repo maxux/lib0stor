@@ -64,8 +64,14 @@ int main(int argc, char *argv[]) {
         chunk_t *chunk = encrypt_chunk(data, buffer->chunksize);
         buffer->finalsize += chunk->length;
 
-        printf("[+] %s [%s]: %lu bytes\n", chunk->id, chunk->cipher, chunk->length);
+        char *chunkid = md5hex(chunk->id);
+        char *chunkcipher = md5hex(chunk->cipher);
+
+        printf("[+] %s [%s]: %lu bytes\n", chunkid, chunkcipher, chunk->length);
         chunks[i] = chunk;
+
+        free(chunkid);
+        free(chunkcipher);
     }
 
     printf("[+] finalsize: %lu bytes\n", buffer->finalsize);

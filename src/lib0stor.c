@@ -5,7 +5,7 @@
 #include <zlib.h>
 #include <math.h>
 #include <time.h>
-#include "openssl/sha.h"
+#include "openssl/md5.h"
 #include "xxtea.h"
 #include "lib0stor.h"
 
@@ -125,13 +125,13 @@ void buffer_free(buffer_t *buffer) {
 //
 // hashing
 //
-char __hex[] = "0123456789abcdef";
+static char __hex[] = "0123456789abcdef";
 
-static char *sha256hex(unsigned char *hash) {
-    char *buffer = calloc((SHA256_DIGEST_LENGTH * 2) + 1, sizeof(char));
+char *md5hex(unsigned char *hash) {
+    char *buffer = calloc((MD5_DIGEST_LENGTH * 2) + 1, sizeof(char));
     char *writer = buffer;
 
-    for(int i = 0, j = 0; i < SHA256_DIGEST_LENGTH; i++, j += 2) {
+    for(int i = 0, j = 0; i < MD5_DIGEST_LENGTH; i++, j += 2) {
         *writer++ = __hex[(hash[i] & 0xF0) >> 4];
         *writer++ = __hex[hash[i] & 0x0F];
     }
@@ -139,6 +139,7 @@ static char *sha256hex(unsigned char *hash) {
     return buffer;
 }
 
+#if 0
 static char *sha256(const unsigned char *buffer, size_t length) {
     unsigned char hash[SHA256_DIGEST_LENGTH];
     SHA256_CTX sha256;
@@ -149,11 +150,29 @@ static char *sha256(const unsigned char *buffer, size_t length) {
 
     return sha256hex(hash);
 }
+#endif
+
+static unsigned char *md5(const unsigned char *buffer, size_t length) {
+    unsigned char *hash;
+    MD5_CTX md5;
+
+    if(!(hash = malloc(MD5_DIGEST_LENGTH))) {
+        perror("[-] malloc");
+        return NULL;
+    }
+
+    MD5_Init(&md5);
+    MD5_Update(&md5, buffer, length);
+    MD5_Final(hash, &md5);
+
+    return hash;
+}
+
 
 //
 // chunks manager
 //
-chunk_t *chunk_new(char *id, char *cipher, unsigned char *data, size_t length) {
+chunk_t *chunk_new(unsigned char *id, unsigned char *cipher, unsigned char *data, size_t length) {
     chunk_t *chunk;
 
     if(!(chunk = malloc(sizeof(chunk_t)))) {
@@ -184,8 +203,13 @@ void chunk_free(chunk_t *chunk) {
 // returns a chunk with key, cipher, data and it's length
 chunk_t *encrypt_chunk(const unsigned char *chunk, size_t chunksize) {
     // hashing this chunk
-    char *hashkey = sha256(chunk, chunksize);
-    verbose("[+] chunk hash: %s\n", (char *) hashkey);
+    unsigned char *hashkey = md5(chunk, chunksize);
+
+    if(libdebug) {
+        char *inhash = md5hex(hashkey);
+        printf("[+] chunk hash: %s\n", inhash);
+        free(inhash);
+    }
 
     //
     // compress
@@ -205,29 +229,18 @@ chunk_t *encrypt_chunk(const unsigned char *chunk, size_t chunksize) {
     size_t encrypt_length;
     unsigned char *encrypt_data = xxtea_encrypt(compressed, output_length, hashkey, &encrypt_length);
 
-    char *hashcrypt = sha256(encrypt_data, encrypt_length);
-    verbose("[+] encrypted hash: %s\n", (char *) hashcrypt);
+    unsigned char *hashcrypt = md5(encrypt_data, encrypt_length);
 
-    //
-    // data checksum
-    //
-    unsigned long ucrc = crc32(0L, Z_NULL, 0);
-    ucrc = crc32(ucrc, encrypt_data, encrypt_length);
-    // printf("CRC: %02lx\n", ucrc);
-
-    //
-    // final encapsulation (header, crc)
-    //
-    size_t final_length = encrypt_length + 8 + 8;
-    unsigned char *final = malloc(sizeof(char) * final_length); // data + crc + prefix
-    sprintf((char *) final, "10000000%02lx", ucrc);
-    memcpy(final + 16, encrypt_data, encrypt_length);
+    if(libdebug) {
+        char *inhash = md5hex(hashcrypt);
+        printf("[+] encrypted hash: %s\n", inhash);
+        free(inhash);
+    }
 
     // cleaning
     free(compressed);
-    free(encrypt_data);
 
-    return chunk_new(hashcrypt, hashkey, final, final_length);
+    return chunk_new(hashcrypt, hashkey, encrypt_data, encrypt_length);
 }
 
 // uncrypt a chunk
@@ -242,7 +255,7 @@ chunk_t *decrypt_chunk(chunk_t *chunk) {
     //
     size_t plainlength;
     // printf("[+] cipher: %s\n", chunk->cipher);
-    if(!(plaindata = xxtea_decrypt(chunk->data + 16, chunk->length - 16, chunk->cipher, &plainlength))) {
+    if(!(plaindata = xxtea_decrypt(chunk->data, chunk->length, chunk->cipher, &plainlength))) {
         verbose("[-] cannot decrypt data, invalid key or payload\n");
         return NULL;
     }
@@ -265,13 +278,20 @@ chunk_t *decrypt_chunk(chunk_t *chunk) {
     //
     // testing integrity
     //
-    char *integrity = sha256((unsigned char *) uncompress, uncompressed_length);
+    unsigned char *integrity = md5((unsigned char *) uncompress, uncompressed_length);
     // printf("[+] integrity: %s\n", integrity);
 
-    if(strcmp(integrity, chunk->cipher)) {
+
+    if(memcmp(integrity, chunk->cipher, MD5_DIGEST_LENGTH)) {
+        char *inhash = md5hex(integrity);
+        char *outhash = md5hex(chunk->cipher);
+
         verbose("[-] integrity check failed: hash mismatch\n");
-        verbose("[-] %s <> %s\n", integrity, chunk->cipher);
-        // FIXME: free
+        verbose("[-] %s <> %s\n", inhash, outhash);
+
+        free(inhash);
+        free(outhash);
+
         return NULL;
     }
 
