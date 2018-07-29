@@ -3,6 +3,8 @@
 
     #include <stdint.h>
 
+    #define LIB0STOR_HASH_LENGTH   16
+
     typedef struct remote_t {
         void *redis;
 

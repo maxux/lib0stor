@@ -11,7 +11,7 @@
 #include "lib0stor.h"
 
 #define CHUNK_SIZE    1024 * 512    // 512 KB
-#define HASH_LENGTH   16
+#define HASH_LENGTH   LIB0STOR_HASH_LENGTH
 
 static int libdebug = 0;
 
