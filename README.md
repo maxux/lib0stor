@@ -1,6 +1,14 @@
 # lib0stor (0-stor legacy library)
 
-This is a legacy version of the library used to split and encrypt files on Zero-OS backend
+This is the library used to split and encrypt files on Zero-OS backend.
+
+## Workflow
+- Take a file
+- Chunk this file (512 KB by default)
+- Hash each chunk using blake2b hash (16 bytes)
+- Encrypt each chunk using `xxtea` (using the blake2 hash as key)
+- Hash this encrypted chunk (using blake2)
+- Return the chunks with hash and key
 
 ## Dependencies
 ```bash
@@ -14,9 +22,9 @@ git submodule init
 git submodule update
 ```
 
-Install dependencies: `ssl snappy zlib python`
+Install dependencies: `libb2-dev snappy zlib python`
 
-On ubuntu, you can install them via: `apt-get install build-essential libz-dev libssl-dev python3-dev libsnappy-dev`
+On ubuntu, you can install them via: `apt-get install build-essential libz-dev libb2-dev python3-dev libsnappy-dev`
 
 ## Compilation
 
