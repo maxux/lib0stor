@@ -4,7 +4,7 @@ SRC = g8stor-cli.c
 OBJ = g8stor-cli.o
 
 CFLAGS  = -pthread -W -Wall -O2 -I../src/ -g
-LDFLAGS = ../src/lib0stor.a -lssl -lcrypto -lsnappy -lz -lm
+LDFLAGS = -fopenmp ../src/lib0stor.a -lssl -lcrypto -lsnappy -lz -lm -lb2
 
 all: $(EXEC)
 

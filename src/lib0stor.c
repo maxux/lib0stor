@@ -1,16 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <snappy-c.h>
 #include <zlib.h>
 #include <math.h>
 #include <time.h>
-#include "openssl/md5.h"
+#include <blake2.h>
 #include "xxtea.h"
 #include "lib0stor.h"
 
 #define CHUNK_SIZE    1024 * 512    // 512 KB
-#define SHA256LEN     (size_t) SHA256_DIGEST_LENGTH * 2
+#define HASH_LENGTH   16
 
 static int libdebug = 0;
 
@@ -113,7 +114,7 @@ const unsigned char *buffer_next(buffer_t *buffer) {
 
     buffer->current += buffer->chunksize;
 
-    return (const unsigned char *) buffer->data;
+    return (const uint8_t *) buffer->data;
 }
 
 void buffer_free(buffer_t *buffer) {
@@ -127,11 +128,11 @@ void buffer_free(buffer_t *buffer) {
 //
 static char __hex[] = "0123456789abcdef";
 
-char *md5hex(unsigned char *hash) {
-    char *buffer = calloc((MD5_DIGEST_LENGTH * 2) + 1, sizeof(char));
+char *hashhex(uint8_t *hash) {
+    char *buffer = calloc((HASH_LENGTH * 2) + 1, sizeof(char));
     char *writer = buffer;
 
-    for(int i = 0, j = 0; i < MD5_DIGEST_LENGTH; i++, j += 2) {
+    for(int i = 0, j = 0; i < HASH_LENGTH; i++, j += 2) {
         *writer++ = __hex[(hash[i] & 0xF0) >> 4];
         *writer++ = __hex[hash[i] & 0x0F];
     }
@@ -139,31 +140,18 @@ char *md5hex(unsigned char *hash) {
     return buffer;
 }
 
-#if 0
-static char *sha256(const unsigned char *buffer, size_t length) {
-    unsigned char hash[SHA256_DIGEST_LENGTH];
-    SHA256_CTX sha256;
+static uint8_t *hashbuf(const void *buffer, size_t length) {
+    uint8_t *hash;
 
-    SHA256_Init(&sha256);
-    SHA256_Update(&sha256, buffer, length);
-    SHA256_Final(hash, &sha256);
-
-    return sha256hex(hash);
-}
-#endif
-
-static unsigned char *md5(const unsigned char *buffer, size_t length) {
-    unsigned char *hash;
-    MD5_CTX md5;
-
-    if(!(hash = malloc(MD5_DIGEST_LENGTH))) {
+    if(!(hash = malloc(HASH_LENGTH))) {
         perror("[-] malloc");
         return NULL;
     }
 
-    MD5_Init(&md5);
-    MD5_Update(&md5, buffer, length);
-    MD5_Final(hash, &md5);
+    if(blake2b(hash, buffer, "", HASH_LENGTH, length, 0)) {
+        fprintf(stderr, "[-] blake2 failed\n");
+        return NULL;
+    }
 
     return hash;
 }
@@ -172,7 +160,7 @@ static unsigned char *md5(const unsigned char *buffer, size_t length) {
 //
 // chunks manager
 //
-chunk_t *chunk_new(unsigned char *id, unsigned char *cipher, unsigned char *data, size_t length) {
+chunk_t *chunk_new(uint8_t *id, uint8_t *cipher, void *data, size_t length) {
     chunk_t *chunk;
 
     if(!(chunk = malloc(sizeof(chunk_t)))) {
@@ -201,12 +189,12 @@ void chunk_free(chunk_t *chunk) {
 //
 // encrypt a buffer
 // returns a chunk with key, cipher, data and it's length
-chunk_t *encrypt_chunk(const unsigned char *chunk, size_t chunksize) {
+chunk_t *encrypt_chunk(const uint8_t *chunk, size_t chunksize) {
     // hashing this chunk
-    unsigned char *hashkey = md5(chunk, chunksize);
+    unsigned char *hashkey = hashbuf(chunk, chunksize);
 
     if(libdebug) {
-        char *inhash = md5hex(hashkey);
+        char *inhash = hashhex(hashkey);
         printf("[+] chunk hash: %s\n", inhash);
         free(inhash);
     }
@@ -229,10 +217,10 @@ chunk_t *encrypt_chunk(const unsigned char *chunk, size_t chunksize) {
     size_t encrypt_length;
     unsigned char *encrypt_data = xxtea_encrypt(compressed, output_length, hashkey, &encrypt_length);
 
-    unsigned char *hashcrypt = md5(encrypt_data, encrypt_length);
+    unsigned char *hashcrypt = hashbuf(encrypt_data, encrypt_length);
 
     if(libdebug) {
-        char *inhash = md5hex(hashcrypt);
+        char *inhash = hashhex(hashcrypt);
         printf("[+] encrypted hash: %s\n", inhash);
         free(inhash);
     }
@@ -278,13 +266,13 @@ chunk_t *decrypt_chunk(chunk_t *chunk) {
     //
     // testing integrity
     //
-    unsigned char *integrity = md5((unsigned char *) uncompress, uncompressed_length);
+    unsigned char *integrity = hashbuf((unsigned char *) uncompress, uncompressed_length);
     // printf("[+] integrity: %s\n", integrity);
 
 
-    if(memcmp(integrity, chunk->cipher, MD5_DIGEST_LENGTH)) {
-        char *inhash = md5hex(integrity);
-        char *outhash = md5hex(chunk->cipher);
+    if(memcmp(integrity, chunk->cipher, HASH_LENGTH)) {
+        char *inhash = hashhex(integrity);
+        char *outhash = hashhex(chunk->cipher);
 
         verbose("[-] integrity check failed: hash mismatch\n");
         verbose("[-] %s <> %s\n", inhash, outhash);

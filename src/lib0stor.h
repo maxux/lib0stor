@@ -1,6 +1,8 @@
 #ifndef LIBG8STOR_H
     #define LIBG8STOR_H
 
+    #include <stdint.h>
+
     typedef struct remote_t {
         void *redis;
 
@@ -8,7 +10,7 @@
 
     typedef struct buffer_t {
         FILE *fp;
-        unsigned char *data;
+        uint8_t *data;
         size_t length;
         size_t current;
         size_t chunksize;
@@ -18,9 +20,9 @@
     } buffer_t;
 
     typedef struct chunk_t {
-        unsigned char *id;
-        unsigned char *cipher;
-        unsigned char *data;
+        uint8_t *id;
+        uint8_t *cipher;
+        uint8_t *data;
         size_t length;
 
     } chunk_t;
@@ -32,16 +34,16 @@
     // file buffer
     buffer_t *bufferize(char *filename);
     buffer_t *buffer_writer(char *filename);
-    const unsigned char *buffer_next(buffer_t *buffer);
+    const uint8_t *buffer_next(buffer_t *buffer);
     void buffer_free(buffer_t *buffer);
 
     // chunk
-    chunk_t *chunk_new(unsigned char *hash, unsigned char *key, unsigned char *data, size_t length);
+    chunk_t *chunk_new(uint8_t *hash, uint8_t *key, void *data, size_t length);
     void chunk_free(chunk_t *chunk);
-    char *md5hex(unsigned char *hash);
+    char *hashhex(uint8_t *hash);
 
     // encryption
-    chunk_t *encrypt_chunk(const unsigned char *chunk, size_t chunksize);
+    chunk_t *encrypt_chunk(const uint8_t *chunk, size_t chunksize);
     chunk_t *decrypt_chunk(chunk_t *chunk);
 
     // networking
