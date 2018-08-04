@@ -3,7 +3,7 @@ from distutils.core import setup, Extension
 g8storclient = Extension(
     'g8storclient',
     include_dirs=['../src/'],
-    libraries=['ssl', 'crypto', 'snappy', 'z', 'm'],
+    libraries=['snappy', 'z', 'm', 'b2'],
     extra_objects=['../src/lib0stor.a'],
     sources=['lib0stor-python.c'],
     extra_compile_args=['-std=c99'],
